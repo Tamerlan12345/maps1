@@ -1,0 +1,14 @@
+:{$PORT} {
+    # Устанавливаем корневую папку для сервера
+   root * .
+
+    # Включаем файловый сервер
+   file_server
+
+    # Управляем заголовками
+   header {
+        # Добавляем наш собственный заголовок CSP, который разрешает 'unsafe-eval'
+        # Это необходимо для корректной работы turf.min.js
+        Content-Security-Policy "script-src 'self' 'unsafe-inline' https: * 'unsafe-eval';"
+   }
+}

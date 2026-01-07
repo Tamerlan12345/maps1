@@ -1,0 +1,681 @@
+:root {
+  --bg-color: #f8f9fa;
+  --panel-bg: #ffffff;
+  --text-color: #212529;
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --border-color: #dee2e6;
+  --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --font-family: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--panel-bg);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  z-index: 1001;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  height: 30px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.actions button, .button-like {
+  position: relative;
+  margin-left: 1rem;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-family: var(--font-family);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.actions button:hover, .button-like:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+main {
+  display: flex;
+  flex-grow: 1;
+  height: calc(100vh - 73px);
+}
+
+aside#panel {
+  width: 450px;
+  flex-shrink: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background-color: var(--panel-bg);
+  border-right: 1px solid var(--border-color);
+  z-index: 1000;
+  position: relative;
+}
+
+section#map {
+  flex-grow: 1;
+  height: 100%;
+}
+
+.section {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+}
+
+.section h3 {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.filter-group {
+    margin-bottom: 1.25rem;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 1rem;
+    color: #495057;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+.filter-actions {
+    margin-top: 1.5rem;
+}
+
+#btnApply {
+  flex: 2;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#btnApply:hover {
+  background-color: var(--primary-hover);
+}
+
+#btnReset {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.75rem;
+}
+
+.contract-card {
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+  font-size: 1rem;
+  transition: box-shadow 0.2s;
+}
+.contract-card:hover {
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+}
+
+.contract-card .meta {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+
+.legend {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  z-index: 999;
+  backdrop-filter: blur(5px);
+}
+.legend.hidden { display: none; }
+.legend .row { align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.legend i { width: 1.5rem; height: 1rem; border: 1px solid #ccc; border-radius: 0.25rem; }
+
+.loader, .overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+}
+
+.loader {
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 400px;
+}
+
+.loader-content {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--primary-color);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  animation: spin 1s linear infinite;
+  margin-right: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  background-color: #e9ecef;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  width: 0;
+  background-color: var(--primary-color);
+  transition: width 0.2s ease-in-out;
+}
+
+.hidden { display: none !important; }
+
+/* Styles for login security */
+body.login-required #mainContent {
+  display: none;
+}
+
+body.authenticated #mainContent {
+  display: block;
+}
+
+body.authenticated #loginOverlay {
+  display: none;
+}
+
+.login-card {
+  background: var(--panel-bg);
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.login-card h2 { margin-top: 0; margin-bottom: 1.75rem; }
+.login-card label { display: block; text-align: left; margin-bottom: 0.5rem; font-weight: 500; }
+.login-card input { width: 100%; margin-bottom: 1.25rem; padding: 0.75rem; border-radius: 0.5rem; }
+.login-card button {
+  width: 100%;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  font-size: 1.125rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.login-card button:hover { background: var(--primary-hover); }
+.muted { color: #6c757d; font-size: 1rem; margin-top: 1.25rem; }
+
+.hidden-input {
+  display: none;
+}
+
+#btnResetExcel {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+#btnResetExcel:hover {
+  background-color: #c82333;
+  transform: scale(1.1);
+}
+
+.region-card {
+  background: var(--panel-bg);
+  border-radius: 0.75rem;
+  padding: 1.5rem 2rem;
+  width: 90vw;
+  max-width: 1200px;
+  height: 90vh;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.region-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+.region-header h2 { margin: 0; font-size: 1.75rem; }
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 2.5rem;
+  font-weight: 300;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  line-height: 1;
+}
+.close-btn:hover { color: #212529; }
+
+.region-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+.region-stats > div {
+    flex: 1;
+}
+.region-stats b {
+    display: block;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.region-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+.region-actions input { flex-grow: 1; }
+.region-actions button {
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--panel-bg);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.region-actions button:hover { background-color: #e9ecef; }
+
+#regionContracts {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  user-select: none; /* Prevent text selection */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.collapsible-header h3 {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+#contractToggleIcon {
+  display: inline-block; /* Allows transform */
+  transition: transform 0.2s ease-in-out;
+}
+
+#contractToggleIcon.rotated {
+  transform: rotate(90deg);
+}
+
+#contractsList.collapsed {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    height: auto;
+    overflow: auto;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .actions button, .button-like {
+    margin-left: 0;
+    flex-grow: 1;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .actions button:first-child, .button-like:first-child {
+      margin-right: 0.5rem;
+  }
+
+  main {
+    flex-direction: column;
+    height: auto;
+  }
+
+  aside#panel {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem;
+    overflow-y: visible;
+  }
+
+  section#map {
+    height: 60vh; /* Or a fixed height like 400px */
+  }
+
+  .section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .section h3 {
+      font-size: 1.1rem;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+  }
+
+  .scroll {
+      max-height: 250px;
+  }
+
+  .login-card, .region-card {
+      width: 95vw;
+      padding: 1.5rem;
+      height: auto;
+  }
+
+  .region-stats, .region-actions {
+      flex-direction: column;
+      gap: 0.75rem;
+  }
+
+  .legend {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Fire Pulse Animation */
+.pulse {
+  animation: pulse-animation 1.5s infinite;
+  transform-origin: center;
+}
+
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+}
+
+/* Risk Tooltips */
+.risk-tooltip-fire, .risk-tooltip-flood {
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.risk-tooltip-fire {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.risk-tooltip-flood {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+/* Fire Marker Dot */
+.fire-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid white;
+}
+
+/* Risk Dashboard */
+.dashboard-panel {
+  position: absolute;
+  top: 160px; /* Below header and map controls */
+  right: 10px;
+  width: auto;       /* Автоматическая ширина под контент */
+  min-width: 350px;  /* Но не меньше 350px */
+  max-width: 500px;  /* И не шире 500px */
+  resize: both;      /* Позволяет пользователю самому тянуть за уголок */
+  overflow: auto;    /* Если контент не влезает, появятся скроллы */
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  font-family: var(--font-family);
+}
+
+@media (max-width: 768px) {
+  .dashboard-panel {
+    width: auto;
+    left: 10px;
+    right: 10px;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: move; /* Показывает, что можно тащить */
+  user-select: none; /* Чтобы текст не выделялся при перетаскивании */
+}
+.dashboard-header h4 { margin: 0; font-size: 1.1rem; }
+.close-small {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.metric-box {
+  margin-bottom: 1rem;
+}
+.metric-box .label { font-size: 0.85rem; color: #6c757d; }
+.metric-box .value { font-size: 1.25rem; font-weight: 600; color: var(--text-color); }
+
+.pml-details {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #f1f3f5;
+  border-radius: 0.25rem;
+}
+
+.pml-header-row {
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.pml-period-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pml-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.chart-container {
+  width: 100%;
+  height: 200px;
+}
+
+/* Risk Indicators */
+.risk-high { color: #dc3545; }
+.risk-medium { color: #ffc107; }
+.risk-low { color: #28a745; }
+
+.pml-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pml-table th, .pml-table td {
+    padding: 8px;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.pml-table td {
+    border-bottom: 1px solid #eee;
+    vertical-align: top; /* Текст прижат к верху ячейки */
+}
+
+/* Перенос длинных слов */
+.pml-table td small {
+    display: block;
+    white-space: normal;
+    color: #666;
+}

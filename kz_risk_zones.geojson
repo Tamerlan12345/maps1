@@ -1,0 +1,45 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Almaty Region" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[74.5, 45.5], [80.5, 45.5], [80.5, 42.5], [74.5, 42.5], [74.5, 45.5]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Turkistan Region" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[67.0, 45.0], [70.0, 45.0], [70.0, 41.0], [67.0, 41.0], [67.0, 45.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Zhambyl Region" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[70.0, 45.0], [75.0, 45.0], [75.0, 42.0], [70.0, 42.0], [70.0, 45.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kyzylorda Region" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[62.0, 46.0], [68.0, 46.0], [68.0, 43.0], [62.0, 43.0], [62.0, 46.0]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Zhetysu Region" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[77.0, 47.0], [82.0, 47.0], [82.0, 44.0], [77.0, 44.0], [77.0, 47.0]]]
+      }
+    }
+  ]
+}
