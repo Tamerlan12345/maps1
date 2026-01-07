@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Centras GeoScope</title>
+  <title>Centras-Maps</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,15 +14,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- SheetJS (Lazy Loaded) -->
-
-  <!-- Turf.js (Lazy Loaded) -->
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- bcryptjs -->
-  <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+  <!-- Turf.js (Lazy Loaded or explicitly included if needed) -->
+  <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 
   <!-- Leaflet.pattern -->
   <script src="leaflet.pattern.js"></script>
@@ -35,117 +28,17 @@
   <!-- Leaflet Heat -->
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <link rel="stylesheet" href="./style.css" />
 </head>
-<body class="login-required">
-  <div id="loginOverlay" class="overlay">
-    <div class="login-card">
-      <h2>Вход в систему</h2>
-      <div>
-        <label for="loginUser">Логин</label>
-        <input id="loginUser" type="text" placeholder="Введите логин" />
-      </div>
-      <div>
-        <label for="loginPass">Пароль</label>
-        <input id="loginPass" type="password" placeholder="Введите пароль" />
-      </div>
-      <button id="btnLogin">Войти</button>
-    </div>
-  </div>
+<body>
 
-  <div id="mainContent" class="hidden">
-    <!-- Risk Analytics Dashboard -->
-    <div id="risk-dashboard" class="dashboard-panel hidden">
-      <div class="dashboard-header">
-        <h4>Risk Analytics</h4>
-        <button id="btnCloseDashboard" class="close-small">&times;</button>
-      </div>
-      <div class="dashboard-content">
-        <div class="metric-box">
-          <div class="label">Общая сумма риска</div>
-          <div class="value" id="dashTotalExposure">0 ₸</div>
-        </div>
-        <div class="metric-box">
-          <div class="label">PML (Вероятный убыток)</div>
-          <div class="value" id="dashPML">0 ₸</div>
-          <div id="pmlDetails" class="pml-details hidden"></div>
-        </div>
-        <div class="chart-container">
-          <canvas id="riskChart"></canvas>
-        </div>
-      </div>
-    </div>
-
+  <div id="mainContent">
     <header>
-      <div class="title"><img src="./logo.png" alt="Logo" class="header-logo"> Centras GeoScope</div>
-      <div class="actions">
-        <label class="button-like" id="excelLabel">
-          <span>Загрузить Excel</span>
-          <input id="excelInput" type="file" accept=".xls,.xlsx" class="hidden-input" />
-          <span id="btnResetExcel" class="hidden">&times;</span>
-        </label>
-        <button id="btnShowUnlocated">Ненайденные (<span id="unlocatedCount">0</span>)</button>
-        <button id="btnFit">Показать все</button>
-        <button id="btnLogout">Выход</button>
-      </div>
+      <div class="title"><img src="./logo.png" alt="Logo" class="header-logo"> Centras-Maps</div>
     </header>
 
     <main>
       <aside id="panel">
-        <section class="section">
-          <h3>Фильтры</h3>
-          <div class="filter-group">
-            <label>Интервал дат</label>
-            <div class="row">
-              <input id="filterStart" type="date" />
-              <input id="filterEnd" type="date" />
-            </div>
-          </div>
-          <div class="filter-group">
-            <label for="filterStatus">Статус</label>
-            <select id="filterStatus">
-              <option value="all">Все</option>
-              <option value="active">Активные</option>
-              <option value="inactive">Неактивные</option>
-            </select>
-          </div>
-          <div class="filter-group">
-              <label for="filterType">Тип объекта</label>
-              <input id="filterType" type="text" placeholder="Поиск по типу" />
-          </div>
-          <div class="filter-group">
-            <label for="filterAmountRange">Сумма страхования</label>
-            <select id="filterAmountRange">
-              <option value="all">Все диапазоны</option>
-              <option value="0-1M">До 1 млн</option>
-              <option value="1M-5M">1 млн - 5 млн</option>
-              <option value="5M-10M">5 млн - 10 млн</option>
-              <option value="10M-50M">10 млн - 50 млн</option>
-              <option value="50M+">Более 50 млн</option>
-            </select>
-          </div>
-          <div class="row filter-actions">
-            <button id="btnApply">Применить</button>
-            <button id="btnReset">Сброс</button>
-          </div>
-        </section>
-
-        <section class="section">
-          <h3>Статистика</h3>
-          <div id="stats"></div>
-        </section>
-
-        <section class="section list">
-          <div id="toggleContractsList" class="collapsible-header">
-            <h3>Договоры</h3>
-            <span id="contractToggleIcon" class="toggle-icon">▶</span>
-          </div>
-          <div id="contractsList" class="scroll collapsed"></div>
-        </section>
-
         <section class="section list">
             <div id="toggleEarthquakesList" class="collapsible-header">
                 <h3>Землетрясения</h3>
@@ -159,54 +52,23 @@
     </main>
 
     <div id="legendSeismic" class="legend hidden"></div>
+  </div>
 
-    <div id="loader" class="loader hidden">
-      <div class="loader-content">
-        <div class="spinner"></div>
-        <div id="loaderText">Загрузка...</div>
-      </div>
-      <div class="progress-bar">
-        <div id="progressBar" class="progress-bar-inner"></div>
-      </div>
-    </div>
-
-    <div id="regionCard" class="overlay hidden">
-      <div class="region-card">
-          <div class="region-header">
-              <h2 id="regionName"></h2>
-              <button id="btnCloseRegion" class="close-btn">&times;</button>
-          </div>
-          <div id="regionStats" class="region-stats"></div>
-          <div class="region-actions">
-              <input type="text" id="regionSearch" placeholder="Поиск по типу или адресу...">
-              <button id="btnExportRegion">Экспорт в Excel</button>
-          </div>
-
-          <div id="regionPMLContainer" class="section">
-            <h4>Расчет PML по региону</h4>
-            <div id="regionPMLStats"></div>
-          </div>
-
-          <div id="regionContracts" class="scroll"></div>
-      </div>
-    </div>
-
-    <div id="unlocatedPanel" class="overlay hidden">
-      <div class="region-card">
-        <div class="region-header">
-          <h2>Договоры без локации</h2>
-          <button id="btnCloseUnlocated" class="close-btn">&times;</button>
-        </div>
-        <div class="region-actions">
-          <input type="text" id="unlocatedSearch" placeholder="Поиск по типу или адресу...">
-        </div>
-        <div id="unlocatedList" class="scroll"></div>
-      </div>
+  <div id="disclaimer-footer" class="disclaimer-bar">
+    <div class="disclaimer-content">
+      <p>
+        <strong>Внимание:</strong> Данный сервис носит исключительно информационно-ознакомительный характер.
+        Данные о землетрясениях предоставлены <a href="https://earthquake.usgs.gov/" target="_blank">USGS API</a>,
+        метеорологические данные — <a href="https://open-meteo.com/" target="_blank">Open-Meteo API</a>.
+      </p>
+      <p>
+        Сервис использует общедоступные бесплатные источники данных, которые могут содержать погрешности или задержки.
+        Компания не несет ответственности за принятые решения, основанные на данной информации.
+        Сервис не является официальным источником оповещения о ЧС.
+      </p>
     </div>
   </div>
 
-  <script src="./config.js" defer></script>
-  <script src="./riskEngine.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
