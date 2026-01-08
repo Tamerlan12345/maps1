@@ -36,8 +36,8 @@ window.ensureLibraryLoaded = ensureLibraryLoaded;
 
 // ---- Map ----
 const map = L.map('map', {
-  minZoom: 5,
-  maxBounds: [[40, 45], [56, 88]], // Approximate bounds for Kazakhstan
+  minZoom: 2,
+  // maxBounds removed
   scrollWheelZoom: true,
   dragging: true
 }).setView([48.0196, 66.9237], 5);
@@ -130,11 +130,15 @@ async function initFloodLayer() {
   floodLayer.clearLayers();
   console.log(`Checking weather for ${Object.keys(KZ_REGIONS).length} regions...`);
 
-  const tasks = Object.entries(KZ_REGIONS).map(async ([name, coords]) => {
-    const forecast = await fetchFloodForecast(coords.lat, coords.lon);
-    if (!forecast) return;
+  // Use sequential fetching to avoid 429 Too Many Requests
+  for (const [name, coords] of Object.entries(KZ_REGIONS)) {
+    // Add small delay to respect API rate limits
+    await new Promise(r => setTimeout(r, 100));
 
-    if (forecast.risk === 'low') return;
+    const forecast = await fetchFloodForecast(coords.lat, coords.lon);
+    if (!forecast) continue;
+
+    if (forecast.risk === 'low') continue;
 
     let color = '#22c55e'; // Green
     let iconType = '🌧';
@@ -160,9 +164,7 @@ async function initFloodLayer() {
     });
 
     marker.addTo(floodLayer);
-  });
-
-  await Promise.all(tasks);
+  }
 }
 
 
@@ -226,34 +228,21 @@ function renderSeismicLegend() {
 // ---- Earthquake Data ----
 async function loadEarthquakeData() {
     try {
-        const response = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
+        const response = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson');
         const data = await response.json();
-
-        const KZ_CENTER = { lat: 48.0, lon: 66.9 };
-        const MAX_DISTANCE_KM = 1500; // Search radius to include nearby countries affecting KZ
 
         let newEvents = data.features.filter(event => {
             return !earthquakeEvents.some(existing => existing.id === event.id);
         });
 
-        // Filter by distance
-        let relevantEvents = newEvents.filter(event => {
-            const [lon, lat] = event.geometry.coordinates;
-            const distance = calculateDistance(lat, lon, KZ_CENTER.lat, KZ_CENTER.lon);
-            return distance < MAX_DISTANCE_KM;
-        });
-
-        earthquakeEvents = data.features.filter(event => {
-             const [lon, lat] = event.geometry.coordinates;
-             const distance = calculateDistance(lat, lon, KZ_CENTER.lat, KZ_CENTER.lon);
-             return distance < MAX_DISTANCE_KM;
-        });
+        // Use all events without distance filtering
+        earthquakeEvents = data.features;
 
         renderEarthquakes();
         renderEarthquakeList();
 
-        // Process ShakeMap for relevant NEW events
-        for (const event of relevantEvents) {
+        // Process ShakeMap for NEW events
+        for (const event of newEvents) {
              if (event.properties.mag >= 5.0) {
                  processShakeMap(event.properties.detail);
              }
@@ -418,12 +407,14 @@ async function init() {
   osmLayer.addTo(map);
   regionLayer.addTo(map);
   earthquakeLayer.addTo(map);
+  floodLayer.addTo(map);
 
   // Default load
   await Promise.all([
       loadRegions(),
       loadSeismicZones(),
-      loadEarthquakeData()
+      loadEarthquakeData(),
+      initFloodLayer()
   ]);
 
   await ensureLibraryLoaded('turf', LIBS.turf);
@@ -431,21 +422,6 @@ async function init() {
   renderRegions(); // re-render with risk colors
   renderSeismicLegend();
   setupLayerControl();
-
-  // Weather is optional, but we can load it if user toggles it or by default?
-  // Task says "Change logic... display icons...". Let's load it but maybe not show if empty.
-  // Actually, let's just enable the layer but it will be empty until fetched.
-  // Let's fetch it by default to populate the layer if the layer is added to map.
-  // But to save requests, let's only fetch when layer is added or initially if we want it on.
-  // Let's make it available in control.
-
-  map.on('overlayadd', function(e) {
-    if (e.name === '💧 Погода (Open-Meteo)') {
-       if (floodLayer.getLayers().length === 0) {
-         initFloodLayer();
-       }
-    }
-  });
 
   // Auto-refresh earthquakes
   setInterval(loadEarthquakeData, 10 * 60 * 1000);
