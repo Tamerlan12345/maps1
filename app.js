@@ -12,11 +12,9 @@ async function ensureLibraryLoaded(windowVar, url) {
   }
 
   const promise = new Promise((resolve, reject) => {
-    console.log(`Loading library: ${windowVar}...`);
     const s = document.createElement('script');
     s.src = url;
     s.onload = () => {
-      console.log(`Library loaded: ${windowVar}`);
       resolve();
     };
     s.onerror = (e) => {
@@ -101,69 +99,69 @@ const KZ_REGIONS = {
   'Улытауская': { lat: 48.0, lon: 67.0 } // Approximate
 };
 
-async function fetchFloodForecast(lat, lng) {
+async function initFloodLayer() {
+  floodLayer.clearLayers();
+  const regionNames = Object.keys(KZ_REGIONS);
+  const lats = [];
+  const lons = [];
+
+  for (const coords of Object.values(KZ_REGIONS)) {
+    lats.push(coords.lat);
+    lons.push(coords.lon);
+  }
+
   try {
-    // Precip
-    const rainUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=precipitation_sum&forecast_days=3&timezone=auto`;
+    const rainUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lons.join(',')}&daily=precipitation_sum&forecast_days=3&timezone=auto`;
     const rainResp = await fetch(rainUrl);
     const rainData = await rainResp.json();
 
-    let maxRain = 0;
-    if (rainData.daily && rainData.daily.precipitation_sum) {
-      maxRain = Math.max(...rainData.daily.precipitation_sum);
-    }
+    // The API returns an array of objects if multiple coords are requested.
+    // However, if only 1 location is requested, it returns a single object.
+    // We should handle both, although KZ_REGIONS has multiple entries.
+    const results = Array.isArray(rainData) ? rainData : [rainData];
 
-    // Determine risk
-    let risk = 'low';
-    if (maxRain > 30) risk = 'high';
-    else if (maxRain > 10) risk = 'medium';
+    results.forEach((data, index) => {
+        if (!data || !data.daily || !data.daily.precipitation_sum) return;
 
-    return { maxRain, risk };
+        const maxRain = Math.max(...data.daily.precipitation_sum);
+        let risk = 'low';
+        if (maxRain > 30) risk = 'high';
+        else if (maxRain > 10) risk = 'medium';
+
+        if (risk === 'low') return;
+
+        const name = regionNames[index];
+        const lat = lats[index];
+        const lon = lons[index];
+
+        let color = '#22c55e'; // Green
+        let iconType = '🌧';
+        if (risk === 'medium') { color = '#eab308'; } // Yellow
+        if (risk === 'high') { color = '#ef4444'; iconType = '🌊'; } // Red
+
+        const icon = L.divIcon({
+          className: 'weather-icon',
+          html: `<div style="background:${color}; color:white; border-radius:50%; width:24px; height:24px; text-align:center; line-height:24px; font-size:14px; border:1px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${iconType}</div>`
+        });
+
+        const marker = L.marker([lat, lon], { icon });
+
+        marker.bindTooltip(`
+          <div><b>${iconType} ${name}</b></div>
+          <div>Осадки (макс 24ч): ${maxRain.toFixed(1)} мм</div>
+          <div style="margin-top:5px; font-size:0.8em; color:#555;">
+            ${risk === 'high' ? '⚠️ Опасность паводка' : '⚠️ Сильный дождь'}
+          </div>
+        `, {
+          className: 'risk-tooltip-flood',
+          direction: 'top'
+        });
+
+        marker.addTo(floodLayer);
+    });
 
   } catch (e) {
     console.warn('Meteo fetch failed', e);
-    return null;
-  }
-}
-
-async function initFloodLayer() {
-  floodLayer.clearLayers();
-  console.log(`Checking weather for ${Object.keys(KZ_REGIONS).length} regions...`);
-
-  // Use sequential fetching to avoid 429 Too Many Requests
-  for (const [name, coords] of Object.entries(KZ_REGIONS)) {
-    // Add small delay to respect API rate limits
-    await new Promise(r => setTimeout(r, 100));
-
-    const forecast = await fetchFloodForecast(coords.lat, coords.lon);
-    if (!forecast) continue;
-
-    if (forecast.risk === 'low') continue;
-
-    let color = '#22c55e'; // Green
-    let iconType = '🌧';
-    if (forecast.risk === 'medium') { color = '#eab308'; } // Yellow
-    if (forecast.risk === 'high') { color = '#ef4444'; iconType = '🌊'; } // Red
-
-    const icon = L.divIcon({
-      className: 'weather-icon',
-      html: `<div style="background:${color}; color:white; border-radius:50%; width:24px; height:24px; text-align:center; line-height:24px; font-size:14px; border:1px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${iconType}</div>`
-    });
-
-    const marker = L.marker([coords.lat, coords.lon], { icon });
-
-    marker.bindTooltip(`
-      <div><b>${iconType} ${name}</b></div>
-      <div>Осадки (макс 24ч): ${forecast.maxRain.toFixed(1)} мм</div>
-      <div style="margin-top:5px; font-size:0.8em; color:#555;">
-        ${forecast.risk === 'high' ? '⚠️ Опасность паводка' : '⚠️ Сильный дождь'}
-      </div>
-    `, {
-      className: 'risk-tooltip-flood',
-      direction: 'top'
-    });
-
-    marker.addTo(floodLayer);
   }
 }
 
@@ -250,7 +248,37 @@ async function loadEarthquakeData() {
 
     } catch (error) {
         console.error("Failed to load earthquake data:", error);
+        showToast("Не удалось обновить данные о землетрясениях");
     }
+}
+
+function showToast(message) {
+  let toast = document.getElementById('toast-notification');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-notification';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 9999;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.innerText = message;
+  toast.style.opacity = '1';
+  setTimeout(() => {
+    toast.style.opacity = '0';
+  }, 4000);
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -402,8 +430,6 @@ function setupLayerControl() {
 
 // ---- Init ----
 async function init() {
-  console.log("Initializing Centras-Maps");
-
   osmLayer.addTo(map);
   regionLayer.addTo(map);
   earthquakeLayer.addTo(map);
