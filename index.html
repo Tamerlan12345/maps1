@@ -5,32 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Centras-Maps</title>
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Turf.js (Lazy Loaded or explicitly included if needed) -->
   <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 
-  <!-- Leaflet.pattern -->
   <script src="leaflet.pattern.js"></script>
 
-  <!-- Leaflet.markercluster -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
-  <!-- Leaflet Heat -->
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
   <link rel="stylesheet" href="./style.css" />
   <link rel="icon" type="image/png" href="./logo.png">
-</head>
+
+  <script>
+    // Используем синтаксис {{env "ИМЯ_ПЕРЕМЕННОЙ"}} вместо {{.Env.ИМЯ}}
+    window.GEMINI_API_KEY = "{{env "GEMINI_API_KEY"}}"; 
+  </script>
+  </head>
 <body>
 
   <div id="mainContent">
@@ -40,13 +39,40 @@
 
     <main>
       <aside id="panel">
-        <section class="section list">
-            <div id="toggleEarthquakesList" class="collapsible-header">
-                <h3>Землетрясения</h3>
-                <span id="earthquakeToggleIcon" class="toggle-icon">▶</span>
-            </div>
-            <div id="earthquakeList" class="scroll collapsed"></div>
-        </section>
+        <div class="panel-tabs">
+            <button id="tabEarthquakes" class="tab-btn active">Землетрясения</button>
+            <button id="tabAudit" class="tab-btn">Smart Location</button>
+        </div>
+
+        <div id="contentEarthquakes">
+            <section class="section list">
+                <div id="toggleEarthquakesList" class="collapsible-header">
+                    <h3>Список событий</h3>
+                    <span id="earthquakeToggleIcon" class="toggle-icon">▶</span>
+                </div>
+                <div id="earthquakeList" class="scroll collapsed"></div>
+            </section>
+        </div>
+
+        <div id="contentAudit" class="hidden">
+             <section class="section">
+                <h3>Аудит локации</h3>
+                <div id="auditIntro">
+                    <p style="font-size: 0.9em; color: #555;">
+                        Нажмите кнопку ниже, затем кликните на карте, чтобы проверить локацию для Fast-Food.
+                    </p>
+                    <button id="btnToggleAudit" class="primary-btn">📍 Начать анализ</button>
+                </div>
+
+                <div id="auditLoading" class="hidden" style="text-align: center; padding: 20px;">
+                    <div class="spinner"></div>
+                    <p>Сбор данных и анализ AI...</p>
+                </div>
+
+                <div id="auditResult" class="hidden">
+                    </div>
+             </section>
+        </div>
       </aside>
 
       <section id="map"></section>
