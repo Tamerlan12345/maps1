@@ -40,6 +40,10 @@ const map = L.map('map', {
   dragging: true
 }).setView([48.0196, 66.9237], 5);
 
+map.createPane('earthquakePane');
+map.getPane('earthquakePane').style.zIndex = 650; 
+map.getPane('earthquakePane').style.pointerEvents = 'none';
+
 const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 });
@@ -300,13 +304,14 @@ function renderEarthquakes() {
             const [lon, lat] = geometry.coordinates;
             const magnitude = properties.mag;
             const marker = L.circleMarker([lat, lon], {
+                pane: 'earthquakePane', 
                 radius: magnitude * 1.5,
                 color: '#ff0000',
                 fillColor: '#ff0000',
                 fillOpacity: 0.5,
-                weight: 1
+                weight: 1,
+                interactive: true 
             }).addTo(earthquakeLayer);
-
             const eventTime = new Date(properties.time).toLocaleString('ru-RU');
             marker.bindPopup(`
                 <b>Магнитуда:</b> ${properties.mag}<br>
@@ -454,3 +459,4 @@ async function init() {
 }
 
 init();
+
