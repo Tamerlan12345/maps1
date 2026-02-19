@@ -1,9 +1,12 @@
 // ---- Lazy Loading Helpers ----
 const LIBS = {
-  turf: 'https://unpkg.com/@turf/turf@6.5.0/turf.min.js'
+  turf: {
+    url: 'https://unpkg.com/@turf/turf@6.5.0/turf.min.js',
+    integrity: 'sha384-82q0nm29xZzIo5BMtDYnh2/NxeO6FoaK1S/0nF84w3cEsqbBfun3JdMyDVYWfVY5'
+  }
 };
 
-async function ensureLibraryLoaded(windowVar, url) {
+async function ensureLibraryLoaded(windowVar, libConfig) {
   if (window[windowVar]) return;
   // If loading is already in progress, wait for it
   if (window[`_loading_${windowVar}`]) {
@@ -11,9 +14,16 @@ async function ensureLibraryLoaded(windowVar, url) {
      return;
   }
 
+  const url = typeof libConfig === 'string' ? libConfig : libConfig.url;
+  const integrity = typeof libConfig === 'string' ? null : libConfig.integrity;
+
   const promise = new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = url;
+    if (integrity) {
+      s.integrity = integrity;
+      s.crossOrigin = 'anonymous';
+    }
     s.onload = () => {
       resolve();
     };
@@ -62,12 +72,23 @@ let regionLayer = L.geoJSON(null, {
     onEachFeature: (feature, layer) => {
       const name = feature.properties.shapeName || feature.properties.NAME_1;
       const riskStatus = feature.properties.hasSeismicRisk ? 'Высокий риск' : 'Низкий риск';
-      const html = `
-        <div class="hover-card">
-          <div class="title">${name}</div>
-          <div>Сейсмичность: <b>${riskStatus}</b></div>
-        </div>`;
-      layer.bindTooltip(html, { sticky:true });
+
+      const container = document.createElement('div');
+      container.className = 'hover-card';
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'title';
+      titleDiv.textContent = name;
+
+      const riskDiv = document.createElement('div');
+      riskDiv.textContent = 'Сейсмичность: ';
+      const riskB = document.createElement('b');
+      riskB.textContent = riskStatus;
+      riskDiv.appendChild(riskB);
+
+      container.appendChild(titleDiv);
+      container.appendChild(riskDiv);
+
+      layer.bindTooltip(container, { sticky:true });
       layer.on('mouseover', () => { layer.setStyle({ weight:2, fillOpacity: 0.6 }); });
       layer.on('mouseout',  () => { layer.setStyle({ weight:1, fillOpacity: 0.4 }); });
     }
@@ -150,13 +171,26 @@ async function initFloodLayer() {
 
         const marker = L.marker([lat, lon], { icon });
 
-        marker.bindTooltip(`
-          <div><b>${iconType} ${name}</b></div>
-          <div>Осадки (макс 24ч): ${maxRain.toFixed(1)} мм</div>
-          <div style="margin-top:5px; font-size:0.8em; color:#555;">
-            ${risk === 'high' ? '⚠️ Опасность паводка' : '⚠️ Сильный дождь'}
-          </div>
-        `, {
+        const tooltipContainer = document.createElement('div');
+        const line1 = document.createElement('div');
+        const b = document.createElement('b');
+        b.textContent = `${iconType} ${name}`;
+        line1.appendChild(b);
+
+        const line2 = document.createElement('div');
+        line2.textContent = `Осадки (макс 24ч): ${maxRain.toFixed(1)} мм`;
+
+        const line3 = document.createElement('div');
+        line3.style.marginTop = '5px';
+        line3.style.fontSize = '0.8em';
+        line3.style.color = '#555';
+        line3.textContent = risk === 'high' ? '⚠️ Опасность паводка' : '⚠️ Сильный дождь';
+
+        tooltipContainer.appendChild(line1);
+        tooltipContainer.appendChild(line2);
+        tooltipContainer.appendChild(line3);
+
+        marker.bindTooltip(tooltipContainer, {
           className: 'risk-tooltip-flood',
           direction: 'top'
         });
@@ -313,12 +347,34 @@ function renderEarthquakes() {
                 interactive: true 
             }).addTo(earthquakeLayer);
             const eventTime = new Date(properties.time).toLocaleString('ru-RU');
-            marker.bindPopup(`
-                <b>Магнитуда:</b> ${properties.mag}<br>
-                <b>Местоположение:</b> ${properties.place}<br>
-                <b>Время:</b> ${eventTime}<br>
-                <a href="${properties.url}" target="_blank">Подробнее на USGS</a>
-            `);
+
+            const popupContent = document.createElement('div');
+
+            const magB = document.createElement('b');
+            magB.textContent = 'Магнитуда: ';
+            popupContent.appendChild(magB);
+            popupContent.appendChild(document.createTextNode(properties.mag));
+            popupContent.appendChild(document.createElement('br'));
+
+            const placeB = document.createElement('b');
+            placeB.textContent = 'Местоположение: ';
+            popupContent.appendChild(placeB);
+            popupContent.appendChild(document.createTextNode(properties.place));
+            popupContent.appendChild(document.createElement('br'));
+
+            const timeB = document.createElement('b');
+            timeB.textContent = 'Время: ';
+            popupContent.appendChild(timeB);
+            popupContent.appendChild(document.createTextNode(eventTime));
+            popupContent.appendChild(document.createElement('br'));
+
+            const link = document.createElement('a');
+            link.href = properties.url;
+            link.target = '_blank';
+            link.textContent = 'Подробнее на USGS';
+            popupContent.appendChild(link);
+
+            marker.bindPopup(popupContent);
         }
     });
 }
@@ -338,10 +394,18 @@ function renderEarthquakeList() {
         const eventDate = new Date(properties.time).toLocaleDateString('ru-RU');
         const eventTime = new Date(properties.time).toLocaleTimeString('ru-RU');
 
-        div.innerHTML = `
-            <div><b>M ${properties.mag}</b> - ${properties.place}</div>
-            <div class="meta">${eventDate} ${eventTime}</div>
-        `;
+        const row1 = document.createElement('div');
+        const magB = document.createElement('b');
+        magB.textContent = `M ${properties.mag}`;
+        row1.appendChild(magB);
+        row1.appendChild(document.createTextNode(` - ${properties.place}`));
+
+        const row2 = document.createElement('div');
+        row2.className = 'meta';
+        row2.textContent = `${eventDate} ${eventTime}`;
+
+        div.appendChild(row1);
+        div.appendChild(row2);
 
         div.addEventListener('click', () => {
             const [lon, lat] = geometry.coordinates;
