@@ -1,45 +1,4 @@
-// ---- Lazy Loading Helpers ----
-const LIBS = {
-  turf: {
-    url: 'https://unpkg.com/@turf/turf@6.5.0/turf.min.js',
-    integrity: 'sha384-82q0nm29xZzIo5BMtDYnh2/NxeO6FoaK1S/0nF84w3cEsqbBfun3JdMyDVYWfVY5'
-  }
-};
-
-async function ensureLibraryLoaded(windowVar, libConfig) {
-  if (window[windowVar]) return;
-  // If loading is already in progress, wait for it
-  if (window[`_loading_${windowVar}`]) {
-     await window[`_loading_${windowVar}`];
-     return;
-  }
-
-  const url = typeof libConfig === 'string' ? libConfig : libConfig.url;
-  const integrity = typeof libConfig === 'string' ? null : libConfig.integrity;
-
-  const promise = new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = url;
-    if (integrity) {
-      s.integrity = integrity;
-      s.crossOrigin = 'anonymous';
-    }
-    s.onload = () => {
-      resolve();
-    };
-    s.onerror = (e) => {
-      console.error(`Failed to load library: ${windowVar}`, e);
-      reject(e);
-    };
-    document.head.appendChild(s);
-  });
-
-  window[`_loading_${windowVar}`] = promise;
-  await promise;
-}
-
-// Expose to window for testing/debugging
-window.ensureLibraryLoaded = ensureLibraryLoaded;
+// ---- Lazy Loading Helpers (Removed legacy loader) ----
 
 
 // ---- Map ----
@@ -464,7 +423,9 @@ function getIntensityColor(intensity) {
 
 async function fetchAndDisplayShakeMap(gridUrl, eventTitle) {
     try {
-        await ensureLibraryLoaded('turf', LIBS.turf);
+        if (!window.turf) {
+            window.turf = await import('https://esm.sh/@turf/turf@7');
+        }
         const response = await fetch(gridUrl);
         const intensityData = await response.json();
 
@@ -512,7 +473,9 @@ async function init() {
       initFloodLayer()
   ]);
 
-  await ensureLibraryLoaded('turf', LIBS.turf);
+  const turfModule = await import('https://esm.sh/@turf/turf@7');
+  window.turf = turfModule;
+
   precomputeSeismicRisk();
   renderRegions(); // re-render with risk colors
   renderSeismicLegend();
